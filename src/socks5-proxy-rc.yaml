@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: socks5-proxy-service
+spec:
+  ports:
+    - nodePort: 32766 # 使用了一个较大的端口号，可以根据实际的业务端口占用情况进行调节 
+      port: 1080
+      targetPort: 1080
+      protocol: TCP
+      name: socks5-proxy
+  selector:
+    app: socks5-proxy
+  type: NodePort
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: socks5-proxy-rc
+spec:
+  replicas: 1
+  selector:
+    app: socks5-proxy
+  template:
+    metadata:
+      labels:
+        app: socks5-proxy
+    spec:
+      hostname: socks5-proxy
+      containers:
+        - name: socks5-proxy
+          image: chpengzh/go-socks5-proxy
+          resources:
+            limits:
+              cpu: 1
+              memory: 0.5Gi
+            requests:
+              cpu: 1
+              memory: 0.5Gi
+          ports:
+            - containerPort: 1080
+          securityContext:
+            privileged: true
+      terminationGracePeriodSeconds: 5
+
